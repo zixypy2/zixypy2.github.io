@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Enhanced Discord Webhook Sender</title>
+    <link rel="icon" href="https://images-ext-1.discordapp.net/external/fyC0V9OT9ENSRPbrEFWa2e-Ag4NrSGQAnnMupU6tRds/%3Fsize%3D1024/https/cdn.discordapp.com/avatars/1341600705143636034/a_fa8b3d33b84f4e1f6fe38bc51677e9cd.gif" type="image/gif">
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            background-color: #0c0e10;
+            color: #e0e0e0;
+            font-family: 'Segoe UI', Arial, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            overflow: auto;
+        }
+        #particles-js {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+        }
+        .container {
+            background: rgba(20, 20, 20, 0.95);
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.6);
+            text-align: left;
+            width: 450px;
+            max-width: 90%;
+            color: #00a0ff;
+        }
+        h2 {
+            text-align: center;
+            margin-bottom: 20px;
+            font-size: 24px;
+            color: #00a0ff;
+        }
+        label {
+            display: block;
+            margin: 10px 0 5px;
+            font-size: 14px;
+            color: #b0b0b0;
+        }
+        input, textarea, select {
+            width: 100%;
+            margin-bottom: 10px;
+            padding: 10px;
+            border-radius: 8px;
+            border: 1px solid #00a0ff;
+            background-color: #1a1a1a;
+            color: white;
+            outline: none;
+            box-sizing: border-box;
+        }
+        textarea {
+            resize: vertical;
+            min-height: 80px;
+        }
+        button {
+            width: 100%;
+            margin-top: 15px;
+            padding: 12px;
+            border-radius: 8px;
+            background-color: #00a0ff;
+            color: white;
+            border: none;
+            cursor: pointer;
+            transition: background-color 0.3s, transform 0.1s;
+        }
+        button:hover {
+            background-color: #007bff;
+            transform: scale(1.02);
+        }
+        button:active {
+            transform: scale(0.98);
+        }
+        #response {
+            margin-top: 15px;
+            padding: 10px;
+            border-radius: 8px;
+            text-align: center;
+            font-size: 14px;
+        }
+        .success { background-color: rgba(0, 255, 0, 0.2); color: #00ff00; }
+        .error { background-color: rgba(255, 0, 0, 0.2); color: #ff0000; }
+    </style>
+    <script src="https://cdn.jsdelivr.net/npm/particles.js"></script>
+</head>
+<body>
+    <div id="particles-js"></div>
+    <div class="container">
+        <h2>Enhanced Discord Webhook Sender</h2>
+        <form id="webhookForm" onsubmit="event.preventDefault(); sendWebhook();">
+            <label for="webhook">Webhook URL *</label>
+            <input type="url" id="webhook" placeholder="Enter Discord Webhook URL" required>
+
+            <label for="username">Username</label>
+            <input type="text" id="username" placeholder="Custom username (optional)">
+
+            <label for="avatar">Avatar URL</label>
+            <input type="url" id="avatar" placeholder="Custom avatar URL (optional)">
+
+            <label for="message">Message Content</label>
+            <textarea id="message" placeholder="Enter your message (optional)"></textarea>
+
+            <label for="embed_title">Embed Title</label>
+            <input type="text" id="embed_title" placeholder="Embed title (optional)">
+
+            <label for="embed_description">Embed Description</label>
+            <textarea id="embed_description" placeholder="Embed description (optional)"></textarea>
+
+            <label for="color">Embed Color</label>
+            <input type="color" id="color" value="#00a0ff">
+
+            <button type="submit">Send Webhook</button>
+        </form>
+        <div id="response"></div>
+    </div>
+    <script>
+        particlesJS('particles-js', {
+            particles: { 
+                number: { value: 80 }, 
+                size: { value: 3 }, 
+                color: { value: '#00a0ff' }, 
+                line_linked: { enable: true, distance: 120, color: '#00a0ff', opacity: 0.4 } 
+            },
+            interactivity: { 
+                events: { 
+                    onhover: { enable: true, mode: 'repulse' }, 
+                    onclick: { enable: true, mode: 'push' } 
+                } 
+            }
+        });
+
+        async function sendWebhook() {
+            const webhook = document.getElementById('webhook').value;
+            const username = document.getElementById('username').value;
+            const avatar = document.getElementById('avatar').value;
+            const message = document.getElementById('message').value;
+            const embedTitle = document.getElementById('embed_title').value;
+            const embedDescription = document.getElementById('embed_description').value;
+            const color = document.getElementById('color').value;
+            const responseDiv = document.getElementById('response');
+
+            // Clear previous response
+            responseDiv.innerHTML = '';
+            responseDiv.className = '';
+
+            // Validation
+            if (!webhook) {
+                showResponse('Please provide a Webhook URL.', 'error');
+                return;
+            }
+            if (!message && !embedTitle && !embedDescription) {
+                showResponse('Please provide a message or embed content.', 'error');
+                return;
+            }
+
+            // Build payload
+            const payload = {
+                username: username || 'Webhook Sender',
+                avatar_url: avatar || undefined,
+                content: message || undefined
+            };
+
+            if (embedTitle || embedDescription) {
+                payload.embeds = [{
+                    title: embedTitle || undefined,
+                    description: embedDescription || undefined,
+                    color: parseInt(color.replace('#', ''), 16)
+                }];
+            }
+
+            // Send request with retry logic
+            try {
+                const res = await sendRequestWithRetry(webhook, payload);
+                if (res.ok) {
+                    showResponse('Webhook sent successfully!', 'success');
+                } else {
+                    showResponse(`Error: ${res.statusText || 'Failed to send webhook.'}`, 'error');
+                }
+            } catch (err) {
+                showResponse(`Error: ${err.message}`, 'error');
+            }
+        }
+
+        async function sendRequestWithRetry(webhook, payload, retries = 3, delay = 1000) {
+            for (let i = 0; i < retries; i++) {
+                try {
+                    const res = await fetch(webhook, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(payload)
+                    });
+                    return res;
+                } catch (err) {
+                    if (i === retries - 1) throw err;
+                    await new Promise(resolve => setTimeout(resolve, delay));
+                }
+            }
+        }
+
+        function showResponse(message, type) {
+            const responseDiv = document.getElementById('response');
+            responseDiv.innerHTML = message;
+            responseDiv.className = type;
+        }
+    </script>
+</body>
+</html>
