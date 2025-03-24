@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Zixy's Discord Webhook Sender</title>
+    <title>Zixy's Advanced Discord Webhook Sender</title>
     <link rel="icon" href="https://images-ext-1.discordapp.net/external/fyC0V9OT9ENSRPbrEFWa2e-Ag4NrSGQAnnMupU6tRds/%3Fsize%3D1024/https/cdn.discordapp.com/avatars/1341600705143636034/a_fa8b3d33b84f4e1f6fe38bc51677e9cd.gif" type="image/gif">
     <style>
         body {
@@ -30,7 +30,7 @@
             border-radius: 15px;
             box-shadow: 0 4px 20px rgba(0, 0, 0, 0.6);
             text-align: left;
-            width: 450px;
+            width: 600px;
             max-width: 90%;
             color: #00a0ff;
         }
@@ -88,14 +88,37 @@
         }
         .success { background-color: rgba(0, 255, 0, 0.2); color: #00ff00; }
         .error { background-color: rgba(255, 0, 0, 0.2); color: #ff0000; }
+        .embed-field {
+            border: 1px dashed #00a0ff;
+            padding: 10px;
+            margin-bottom: 10px;
+            border-radius: 8px;
+        }
+        .remove-field {
+            background-color: #ff4444;
+            padding: 5px;
+            border-radius: 5px;
+            margin-top: 5px;
+            cursor: pointer;
+        }
+        .remove-field:hover {
+            background-color: #cc0000;
+        }
+        .embed-section {
+            margin-top: 15px;
+            padding: 15px;
+            border: 1px solid #00a0ff;
+            border-radius: 8px;
+        }
     </style>
     <script src="https://cdn.jsdelivr.net/npm/particles.js"></script>
 </head>
 <body>
     <div id="particles-js"></div>
     <div class="container">
-        <h2>Zixy's Discord Webhook Sender</h2>
+        <h2>Zixy's Advanced Discord Webhook Sender</h2>
         <form id="webhookForm" onsubmit="event.preventDefault(); sendWebhook();">
+            <!-- Basic Webhook Info -->
             <label for="webhook">Webhook URL *</label>
             <input type="url" id="webhook" placeholder="Enter Discord Webhook URL" required>
 
@@ -108,23 +131,55 @@
             <label for="message">Message Content</label>
             <textarea id="message" placeholder="Enter your message (optional)"></textarea>
 
-            <label for="embed_title">Embed Title</label>
-            <input type="text" id="embed_title" placeholder="Embed title (optional)">
+            <!-- Embed Section -->
+            <div class="embed-section">
+                <h3>Embed 1</h3>
+                <label for="embed_title_1">Embed Title</label>
+                <input type="text" id="embed_title_1" placeholder="Embed title (optional)">
 
-            <label for="embed_description">Embed Description</label>
-            <textarea id="embed_description" placeholder="Embed description (optional)"></textarea>
+                <label for="embed_description_1">Embed Description</label>
+                <textarea id="embed_description_1" placeholder="Embed description (optional)"></textarea>
 
-            <label for="color">Embed Color</label>
-            <input type="color" id="color" value="#00a0ff">
+                <label for="color_1">Embed Color</label>
+                <input type="color" id="color_1" value="#00a0ff">
+
+                <label for="embed_image_1">Embed Image URL</label>
+                <input type="url" id="embed_image_1" placeholder="Embed image URL (optional)">
+
+                <label for="embed_thumbnail_1">Embed Thumbnail URL</label>
+                <input type="url" id="embed_thumbnail_1" placeholder="Embed thumbnail URL (optional)">
+
+                <label for="footer_text_1">Footer Text</label>
+                <input type="text" id="footer_text_1" placeholder="Footer text (optional)">
+
+                <label for="footer_icon_1">Footer Icon URL</label>
+                <input type="url" id="footer_icon_1" placeholder="Footer icon URL (optional)">
+
+                <label for="timestamp_1">Include Timestamp</label>
+                <input type="checkbox" id="timestamp_1">
+
+                <!-- Embed Fields -->
+                <div id="fields_1">
+                    <h4>Fields</h4>
+                </div>
+                <button type="button" onclick="addField(1)">Add Field</button>
+            </div>
+
+            <!-- Add More Embeds -->
+            <button type="button" onclick="addEmbed()" id="addEmbedBtn">Add Another Embed</button>
+            <div id="extraEmbeds"></div>
 
             <button type="submit">Send Webhook</button>
         </form>
         <div id="response"></div>
     </div>
     <script>
+        let embedCount = 1;
+        let fieldCounts = { 1: 0 };
+
         particlesJS('particles-js', {
             particles: { 
-                number: { value: 80 }, 
+                number: { value: 100 }, 
                 size: { value: 3 }, 
                 color: { value: '#00a0ff' }, 
                 line_linked: { enable: true, distance: 120, color: '#00a0ff', opacity: 0.4 } 
@@ -137,14 +192,88 @@
             }
         });
 
+        function addField(embedNum) {
+            fieldCounts[embedNum] = fieldCounts[embedNum] || 0;
+            fieldCounts[embedNum]++;
+            const fieldId = `field_${embedNum}_${fieldCounts[embedNum]}`;
+            const fieldsDiv = document.getElementById(`fields_${embedNum}`);
+            const fieldDiv = document.createElement('div');
+            fieldDiv.className = 'embed-field';
+            fieldDiv.id = fieldId;
+            fieldDiv.innerHTML = `
+                <label for="field_name_${fieldId}">Field Name</label>
+                <input type="text" id="field_name_${fieldId}" placeholder="Field name">
+                <label for="field_value_${fieldId}">Field Value</label>
+                <textarea id="field_value_${fieldId}" placeholder="Field value"></textarea>
+                <label for="field_inline_${fieldId}">Inline</label>
+                <input type="checkbox" id="field_inline_${fieldId}">
+                <button type="button" class="remove-field" onclick="removeField('${fieldId}')">Remove Field</button>
+            `;
+            fieldsDiv.appendChild(fieldDiv);
+        }
+
+        function removeField(fieldId) {
+            const fieldDiv = document.getElementById(fieldId);
+            fieldDiv.remove();
+        }
+
+        function addEmbed() {
+            if (embedCount >= 10) {
+                showResponse('Maximum 10 embeds allowed per webhook.', 'error');
+                return;
+            }
+            embedCount++;
+            const extraEmbedsDiv = document.getElementById('extraEmbeds');
+            const embedDiv = document.createElement('div');
+            embedDiv.className = 'embed-section';
+            embedDiv.id = `embed_${embedCount}`;
+            embedDiv.innerHTML = `
+                <h3>Embed ${embedCount}</h3>
+                <label for="embed_title_${embedCount}">Embed Title</label>
+                <input type="text" id="embed_title_${embedCount}" placeholder="Embed title (optional)">
+
+                <label for="embed_description_${embedCount}">Embed Description</label>
+                <textarea id="embed_description_${embedCount}" placeholder="Embed description (optional)"></textarea>
+
+                <label for="color_${embedCount}">Embed Color</label>
+                <input type="color" id="color_${embedCount}" value="#00a0ff">
+
+                <label for="embed_image_${embedCount}">Embed Image URL</label>
+                <input type="url" id="embed_image_${embedCount}" placeholder="Embed image URL (optional)">
+
+                <label for="embed_thumbnail_${embedCount}">Embed Thumbnail URL</label>
+                <input type="url" id="embed_thumbnail_${embedCount}" placeholder="Embed thumbnail URL (optional)">
+
+                <label for="footer_text_${embedCount}">Footer Text</label>
+                <input type="text" id="footer_text_${embedCount}" placeholder="Footer text (optional)">
+
+                <label for="footer_icon_${embedCount}">Footer Icon URL</label>
+                <input type="url" id="footer_icon_${embedCount}" placeholder="Footer icon URL (optional)">
+
+                <label for="timestamp_${embedCount}">Include Timestamp</label>
+                <input type="checkbox" id="timestamp_${embedCount}">
+
+                <div id="fields_${embedCount}">
+                    <h4>Fields</h4>
+                </div>
+                <button type="button" onclick="addField(${embedCount})">Add Field</button>
+                <button type="button" class="remove-field" onclick="removeEmbed(${embedCount})">Remove Embed</button>
+            `;
+            extraEmbedsDiv.appendChild(embedDiv);
+            fieldCounts[embedCount] = 0;
+        }
+
+        function removeEmbed(embedNum) {
+            const embedDiv = document.getElementById(`embed_${embedNum}`);
+            embedDiv.remove();
+            embedCount--;
+        }
+
         async function sendWebhook() {
             const webhook = document.getElementById('webhook').value;
             const username = document.getElementById('username').value;
             const avatar = document.getElementById('avatar').value;
             const message = document.getElementById('message').value;
-            const embedTitle = document.getElementById('embed_title').value;
-            const embedDescription = document.getElementById('embed_description').value;
-            const color = document.getElementById('color').value;
             const responseDiv = document.getElementById('response');
 
             // Clear previous response
@@ -156,7 +285,52 @@
                 showResponse('Please provide a Webhook URL.', 'error');
                 return;
             }
-            if (!message && !embedTitle && !embedDescription) {
+
+            let hasContent = message;
+            const embeds = [];
+            for (let i = 1; i <= embedCount; i++) {
+                const embedTitle = document.getElementById(`embed_title_${i}`)?.value;
+                const embedDescription = document.getElementById(`embed_description_${i}`)?.value;
+                const embedColor = document.getElementById(`color_${i}`)?.value;
+                const embedImage = document.getElementById(`embed_image_${i}`)?.value;
+                const embedThumbnail = document.getElementById(`embed_thumbnail_${i}`)?.value;
+                const footerText = document.getElementById(`footer_text_${i}`)?.value;
+                const footerIcon = document.getElementById(`footer_icon_${i}`)?.value;
+                const timestamp = document.getElementById(`timestamp_${i}`)?.checked;
+
+                const embed = {};
+                if (embedTitle) embed.title = embedTitle;
+                if (embedDescription) embed.description = embedDescription;
+                if (embedColor) embed.color = parseInt(embedColor.replace('#', ''), 16);
+                if (embedImage) embed.image = { url: embedImage };
+                if (embedThumbnail) embed.thumbnail = { url: embedThumbnail };
+                if (footerText || footerIcon) embed.footer = {};
+                if (footerText) embed.footer.text = footerText;
+                if (footerIcon) embed.footer.icon_url = footerIcon;
+                if (timestamp) embed.timestamp = new Date().toISOString();
+
+                // Collect fields
+                const fieldsDiv = document.getElementById(`fields_${i}`);
+                if (fieldsDiv) {
+                    const fields = [];
+                    fieldsDiv.querySelectorAll('.embed-field').forEach(fieldDiv => {
+                        const name = fieldDiv.querySelector(`input[id^="field_name"]`).value;
+                        const value = fieldDiv.querySelector(`textarea[id^="field_value"]`).value;
+                        const inline = fieldDiv.querySelector(`input[id^="field_inline"]`).checked;
+                        if (name && value) {
+                            fields.push({ name, value, inline });
+                        }
+                    });
+                    if (fields.length > 0) embed.fields = fields;
+                }
+
+                if (Object.keys(embed).length > 0) {
+                    embeds.push(embed);
+                    hasContent = true;
+                }
+            }
+
+            if (!hasContent) {
                 showResponse('Please provide a message or embed content.', 'error');
                 return;
             }
@@ -165,22 +339,25 @@
             const payload = {
                 username: username || 'Webhook Sender',
                 avatar_url: avatar || undefined,
-                content: message || undefined
+                content: message || undefined,
+                embeds: embeds.length > 0 ? embeds : undefined
             };
 
-            if (embedTitle || embedDescription) {
-                payload.embeds = [{
-                    title: embedTitle || undefined,
-                    description: embedDescription || undefined,
-                    color: parseInt(color.replace('#', ''), 16)
-                }];
-            }
-
-            // Send request with retry logic
+            // Send request with retry and rate limit handling
             try {
                 const res = await sendRequestWithRetry(webhook, payload);
                 if (res.ok) {
                     showResponse('Webhook sent successfully!', 'success');
+                } else if (res.status === 429) {
+                    const retryAfter = parseInt(res.headers.get('Retry-After') || 1) * 1000;
+                    showResponse(`Rate limited! Retrying after ${retryAfter / 1000}s...`, 'error');
+                    await new Promise(resolve => setTimeout(resolve, retryAfter));
+                    const retryRes = await sendRequestWithRetry(webhook, payload);
+                    if (retryRes.ok) {
+                        showResponse('Webhook sent successfully after retry!', 'success');
+                    } else {
+                        showResponse(`Error after retry: ${retryRes.statusText || 'Failed to send webhook.'}`, 'error');
+                    }
                 } else {
                     showResponse(`Error: ${res.statusText || 'Failed to send webhook.'}`, 'error');
                 }
